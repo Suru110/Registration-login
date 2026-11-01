@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="dashboard-body">
+  <div class="dashboard">
+    <header class="dashboard-header">
+      <div class="header-brand">
+        <span class="logo-sm">🔐</span>
+        <span class="brand-name">AuthApp</span>
+      </div>
+      <button class="btn btn-outline" id="logoutBtn">Sign Out</button>
+    </header>
+
+    <main class="dashboard-main">
+      <div class="welcome-card">
+        <div class="avatar" id="avatarInitial">?</div>
+        <div class="welcome-text">
+          <h2 id="welcomeMsg">Welcome!</h2>
+          <p id="userEmail" class="muted">Loading…</p>
+        </div>
+      </div>
+
+      <div class="info-grid">
+        <div class="info-card">
+          <div class="info-icon">👤</div>
+          <div>
+            <div class="info-label">Username</div>
+            <div class="info-value" id="infoUsername">—</div>
+          </div>
+        </div>
+        <div class="info-card">
+          <div class="info-icon">📧</div>
+          <div>
+            <div class="info-label">Email</div>
+            <div class="info-value" id="infoEmail">—</div>
+          </div>
+        </div>
+        <div class="info-card">
+          <div class="info-icon">🗓</div>
+          <div>
+            <div class="info-label">Member Since</div>
+            <div class="info-value" id="infoCreated">—</div>
+          </div>
+        </div>
+        <div class="info-card">
+          <div class="info-icon">🆔</div>
+          <div>
+            <div class="info-label">User ID</div>
+            <div class="info-value" id="infoId">—</div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    async function loadUser() {
+      try {
+        const res = await fetch('/api/me');
+        const result = await res.json();
+
+        if (!result.success) {
+          window.location.href = '/login.html';
+          return;
+        }
+
+        const { user } = result;
+        document.getElementById('avatarInitial').textContent = user.username.charAt(0).toUpperCase();
+        document.getElementById('welcomeMsg').textContent = `Welcome back, ${user.username}!`;
+        document.getElementById('userEmail').textContent = user.email;
+        document.getElementById('infoUsername').textContent = user.username;
+        document.getElementById('infoEmail').textContent = user.email;
+        document.getElementById('infoId').textContent = `#${user.id}`;
+        document.getElementById('infoCreated').textContent = new Date(user.created_at).toLocaleDateString('en-US', {
+          year: 'numeric', month: 'long', day: 'numeric'
+        });
+      } catch {
+        window.location.href = '/login.html';
+      }
+    }
+
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      const btn = document.getElementById('logoutBtn');
+      btn.disabled = true;
+      btn.textContent = 'Signing out…';
+      try {
+        await fetch('/api/logout', { method: 'POST' });
+      } finally {
+        window.location.href = '/login.html';
+      }
+    });
+
+    loadUser();
+  </script>
+</body>
+</html>

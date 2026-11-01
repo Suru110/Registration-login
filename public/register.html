@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Register</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="card">
+    <div class="card-header">
+      <div class="logo">✨</div>
+      <h1>Create Account</h1>
+      <p>Join us today, it's free</p>
+    </div>
+
+    <div id="message" class="message hidden"></div>
+
+    <form id="registerForm">
+      <div class="form-group">
+        <label for="username">Username</label>
+        <input
+          type="text"
+          id="username"
+          name="username"
+          placeholder="Choose a username (min 3 chars)"
+          autocomplete="username"
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input
+          type="email"
+          id="email"
+          name="email"
+          placeholder="Enter your email address"
+          autocomplete="email"
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <div class="input-wrapper">
+          <input
+            type="password"
+            id="password"
+            name="password"
+            placeholder="Create a password (min 6 chars)"
+            autocomplete="new-password"
+            required
+          />
+          <button type="button" class="toggle-pw" onclick="togglePassword('password', this)">👁</button>
+        </div>
+        <div class="strength-bar">
+          <div id="strengthFill" class="strength-fill"></div>
+        </div>
+        <span id="strengthLabel" class="strength-label"></span>
+      </div>
+
+      <div class="form-group">
+        <label for="confirmPassword">Confirm Password</label>
+        <div class="input-wrapper">
+          <input
+            type="password"
+            id="confirmPassword"
+            name="confirmPassword"
+            placeholder="Repeat your password"
+            autocomplete="new-password"
+            required
+          />
+          <button type="button" class="toggle-pw" onclick="togglePassword('confirmPassword', this)">👁</button>
+        </div>
+      </div>
+
+      <button type="submit" class="btn" id="submitBtn">Create Account</button>
+    </form>
+
+    <p class="footer-text">
+      Already have an account? <a href="login.html">Sign in</a>
+    </p>
+  </div>
+
+  <script>
+    function togglePassword(inputId, btn) {
+      const input = document.getElementById(inputId);
+      if (input.type === 'password') {
+        input.type = 'text';
+        btn.textContent = '🙈';
+      } else {
+        input.type = 'password';
+        btn.textContent = '👁';
+      }
+    }
+
+    function showMessage(text, type) {
+      const el = document.getElementById('message');
+      el.textContent = text;
+      el.className = `message ${type}`;
+    }
+
+    // Password strength meter
+    document.getElementById('password').addEventListener('input', function () {
+      const val = this.value;
+      const fill = document.getElementById('strengthFill');
+      const label = document.getElementById('strengthLabel');
+      let strength = 0;
+
+      if (val.length >= 6) strength++;
+      if (val.length >= 10) strength++;
+      if (/[A-Z]/.test(val)) strength++;
+      if (/[0-9]/.test(val)) strength++;
+      if (/[^A-Za-z0-9]/.test(val)) strength++;
+
+      const levels = [
+        { label: '', color: 'transparent', width: '0%' },
+        { label: 'Weak', color: '#ef4444', width: '25%' },
+        { label: 'Fair', color: '#f97316', width: '50%' },
+        { label: 'Good', color: '#eab308', width: '75%' },
+        { label: 'Strong', color: '#22c55e', width: '90%' },
+        { label: 'Very Strong', color: '#16a34a', width: '100%' },
+      ];
+
+      const level = val.length === 0 ? 0 : Math.min(strength, 5);
+      fill.style.width = levels[level].width;
+      fill.style.backgroundColor = levels[level].color;
+      label.textContent = levels[level].label;
+      label.style.color = levels[level].color;
+    });
+
+    document.getElementById('registerForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('submitBtn');
+      btn.disabled = true;
+      btn.textContent = 'Creating account…';
+
+      const data = {
+        username: document.getElementById('username').value.trim(),
+        email: document.getElementById('email').value.trim(),
+        password: document.getElementById('password').value,
+        confirmPassword: document.getElementById('confirmPassword').value,
+      };
+
+      try {
+        const res = await fetch('/api/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        });
+        const result = await res.json();
+
+        if (result.success) {
+          showMessage(result.message, 'success');
+          setTimeout(() => window.location.href = '/login.html', 1500);
+        } else {
+          showMessage(result.message, 'error');
+          btn.disabled = false;
+          btn.textContent = 'Create Account';
+        }
+      } catch {
+        showMessage('Network error. Please try again.', 'error');
+        btn.disabled = false;
+        btn.textContent = 'Create Account';
+      }
+    });
+  </script>
+</body>
+</html>
